@@ -1,0 +1,106 @@
+---
+title: "NYC Restaurant Inspections"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+
+library(tidyverse)
+library(p8105.datasets)
+library(lubridate)
+library(plotly)
+library(ggmap)
+
+data("rest_inspec")
+
+manhattan_res <- rest_inspec |> 
+  select(camis, dba, boro, street, zipcode, cuisine_description, inspection_date, score, grade) |>
+  filter(
+    !is.na(grade),
+    grade != "Not Yet Graded",
+    boro == "MANHATTAN",
+    format(inspection_date, "%Y") == "2017")
+  
+head(manhattan_res, 10)
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+keywords <- c("African", "American", "Chinese", "French", "Indian", 
+              "Italian", "Japanese", "Korean", "Mexican", 
+              "Spanish", "Thai")
+
+filtered_data <- manhattan_res |> 
+  filter(str_detect(cuisine_description, paste(keywords, collapse = "|")),
+         !(str_detect(cuisine_description, "American") & str_detect(cuisine_description, "Latin")))
+
+p1 <- ggplot(filtered_data, aes(x = cuisine_description, y = score, fill = cuisine_description)) +
+  geom_boxplot(alpha = 0.7, outlier.shape = NA) +  
+  labs(title = "Score Distribution by Selected Cuisine Types",
+       x = "Cuisine Type", y = "Score", fill = "Cuisine Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))  
+
+ggplotly(p1)
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+manhattan_monthly <- manhattan_res |> 
+  mutate(month = as.Date(format(inspection_date, "%Y-%m-01"))) |> 
+  filter(grade %in% c("A", "B", "C")) |> 
+  group_by(grade, month) |> 
+  summarize(count = n(), .groups = "drop")
+
+p2 <- ggplot(manhattan_monthly, aes(x = month, y = count, color = grade, group = grade)) +
+  geom_line(size = 1) +
+  geom_point(size = 1.5) +
+  labs(title = "Monthly Inspection Counts",
+       x = "Month", y = "Inspection Count") +
+  scale_x_date(date_labels = "%m") +  
+  scale_color_manual(values = c("A" = "lightblue", "B" = "lightgreen", "C" = "orange")) +
+  theme_minimal()
+
+ggplotly(p2)
+```
+
+### Chart C
+
+```{r}
+keywords <- c("Bakery", "Coffee", "Donuts", "Hamburgers", "Gelato", "Juice", "Pizza", "Sandwiches")
+
+filtered_data <- manhattan_res |> 
+  filter(str_detect(cuisine_description, paste(keywords, collapse = "|")))
+
+restaurant_counts <- filtered_data |> 
+  group_by(cuisine_description, grade) |> 
+  summarize(count = n(), .groups = "drop")
+
+custom_colors <- c("A" = "#66c2a5",  
+                   "B" = "#fc8d62",  
+                   "C" = "#8da0cb",  
+                   "P" = "#e78ac3",  
+                   "Z" = "#a6d854")  
+
+p3 <- ggplot(restaurant_counts, aes(x = cuisine_description, y = count, fill = grade)) +
+  geom_bar(stat = "identity", position = "stack") +  
+  labs(title = "Restaurant Counts",
+       x = "Cuisine Type", y = "Restaurant Count", fill = "Grade") +
+  scale_fill_manual(values = custom_colors) + 
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+
+ggplotly(p3)
+```

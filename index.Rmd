@@ -9,4 +9,12 @@ output:
 
 ### Welcome to Liqi's web
 
+![](https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGRlcjd6NHE4cGVkYzVhdTlpNDY3MHUydzlzMnZoYWZzdjE1OHZ1YyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Ed8DSUeYGBq4E/giphy.gif)
+
 Hi, welcome to my first website!
+
+You can find some thing about this website at [About](about.html).
+
+Here is my [Resume](resume.html).
+
+Here is a [Flexdashboard](dashboard.html) based on [NYC Restaurant Inspections](https://p8105.com/dataset_restaurant_inspections.html) datasets.
